@@ -171,7 +171,7 @@ end do
 close(unit=3)
 
 
-call system ("gnuplot -persist 'grafica_pol.p' ")
+call system ("gnuplot -persist grafica_pol.p")
 
 end subroutine
 !######################################################
