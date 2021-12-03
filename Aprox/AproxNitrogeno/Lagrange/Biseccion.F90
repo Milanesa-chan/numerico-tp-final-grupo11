@@ -20,7 +20,7 @@ IMPLICIT NONE
 
 !####DECLARACION DE VARIABLES###########################################
 REAL(8) :: a,b
-REAL(8),PARAMETER :: tolerancia=0.0001
+REAL(8),PARAMETER :: tolerancia=0.0000001
 REAL(8),PARAMETER :: e=2.718281828
 
 !# En el paremetro tolerancia se coloca el maximo error.               #
@@ -43,7 +43,7 @@ INTEGER,PARAMETER :: metodo=2
 !####SECCION EJECUTABLE#################################################
 OPEN(UNIT=1,FILE='resolucion.dat',STATUS='REPLACE')
 !Aca se colocan los extremos.
-a=0.
+a=0.005
 b=0.02
 !·······································································
 CALL verificaextremos(a,b)
@@ -97,11 +97,11 @@ WRITE(2,'(a)',ADVANCE='NO')'plot '
 !Write(2,'(a)')
 !.......................................................................
 !En el siguiente renglon se escribe la funcion a graficar.
-WRITE(2,'(a)',ADVANCE='NO')'0.6159010750452907-2*0.03349951646988400*x+3*0.0008234185052889607*x**2-4*0.0000076212700098118279*x**3'
+WRITE(2,'(a)',ADVANCE='NO')'-73517126.479588*(x**4) + 6342523.0872* (x**3) -224327.4899 * (x**2) + 3792.8154*x + 73.89724'
 
 !·······································································
 WRITE(2,'(a)',ADVANCE='NO')' with lines'
-call system ("gnuplot -persist 'grafica.p'")
+call system ("gnuplot -persist grafica.p")
 
 CLOSE(UNIT=2,STATUS='KEEP')
 END SUBROUTINE grafica
@@ -110,7 +110,7 @@ FUNCTION f(x)
 !En esta funcion se coloca la funcion a analizar.
 REAL(8) x,f
 
-    f= 75.743327547388816 + 3089.2829440715868 * x - 137284.27311946356 * x**2 + 2040547.4304120627 * x**3 - 95.
+    f= -73517126.479588*(x**4) + 6342523.0872* (x**3) -224327.4899 * (x**2) + 3792.8154*x + 73.89724 - 95.
 END FUNCTION f
 !#######################################################################
 FUNCTION fprima(x)

@@ -24,6 +24,7 @@ ex(2)=0.01 ; y(2)=95.
 ex(3)=0.015 ; y(3)=98.
 ex(4)=0.02 ; y(4)=99.
 ex(5)=0.024 ; y(5)=99.
+
 do k=1,m
   datos(k-1,1)=ex(k)
   datos(k-1,2)=y(k)
@@ -96,7 +97,7 @@ do while (xf.le.ex(m))
  xf=xf+h
 end do
 close (23, status='keep')
-call system ("gnuplot -persist 'script.p'")
+call system ("gnuplot -persist script.p")
 
 !*************************************************************************
 case(3) ! ERROR DE INTERPOLACION 
