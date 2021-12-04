@@ -1,15 +1,15 @@
 Program Explicito
 
 IMPLICIT NONE
-Real,Parameter:: Pi=3.141592654,Dab=1E-6
+Real,Parameter:: Pi=3.141592654,Dab=1.2E-6
 Real,Parameter:: largo=0.3
 Real,Parameter :: conc_buscada = 0.4954643, punto_buscado = 0.005
-Integer, Parameter :: max_iter = 100000
+Integer, Parameter :: max_iter = 5000
 Integer :: nodos
 Real :: z, dt, dx, tiempo
 Real, ALLOCATABLE :: T(:)
 
-z=0.002
+!z=0.01
 dt=10.
 !dx=(dt*Dab)/z
 dx=0.005
@@ -42,6 +42,7 @@ do while (tf.lt.max_iter) !Tiempo final             !ESCRIBO EL VECTOR EN CADA T
 	if (t(i_buscado).gt.conc_buscada) then
 		tiempo = tf
 		!Write(*,*) tiempo
+		!Write(*,'(F10.2,F10.5)',Advance='yes') tf, t(i_buscado)
 		return
 	endif
 	Write(1,*)
@@ -49,6 +50,7 @@ do while (tf.lt.max_iter) !Tiempo final             !ESCRIBO EL VECTOR EN CADA T
 	 do i=2,nodos-1
 		r = dx*(i-1)
 		t(i)=dt*Dab*((1./r)*((tant(i+1)-tant(i-1))/(2.*dx)) + ((tant(i+1)-2.*tant(i)+tant(i-1))/(dx**2.))) + tant(i)
+		!t(i)=(z/r)*((tant(i+1)-tant(i-1))/(2.)) + z*((tant(i+1)-2.*tant(i)+tant(i-1))/(dx)) + tant(i)
 	 end do
 	 tf=tf+Dt
 end do
