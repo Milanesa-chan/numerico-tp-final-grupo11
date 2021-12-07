@@ -1,35 +1,31 @@
 PROGRAM MinCuadCompletoCarbono
 	IMPLICIT NONE
 	INTEGER g,k
-	REAL(8), ALLOCATABLE :: x(:),y(:),m(:,:),a(:),e(:)
-	REAL(8) var,rms,dur,tol,bis_a,bis_b
+	REAL(8), ALLOCATABLE :: x(:),y(:),m(:,:),a(:)
+	REAL(8) dur,tol,bis_a,bis_b
 	
 	!=== VARIABLES CONFIGURABLES ===
-	g = 3		!GRADO DEL POLINOMIO
 	k = 7		!CANTIDAD DE PUNTOS
 	dur = 95.	!DUREZA BUSCADA
 	tol = 0.0001	!TOLERANCIA PARA LA BISECCION
 	bis_a = 0.		!EXTREMOS PARA LA BISECCION
 	bis_b = 1.
 	!===============================
-	ALLOCATE(x(k),y(k),m(g+1,g+2),a(g+1),e(k))
+	
+	g = k-1		!GRADO DEL POLINOMIO
+	ALLOCATE(x(k),y(k),m(g+1,g+2),a(g+1))
 	
 	CALL ingresar_datos(k,x,y)
-	CALL armar_sistema(k,g,x,y,m)
-	CALL gauss(m,a,g+1)
-	CALL errores(g,k,x,y,a,e)
+	CALL lagrange(x,y,k,g,a)
 	
-	var = sum(e**2)/(k-g-1)
-	rms=sqrt(sum(e**2)/k)
-	
-	CALL mostrar_aprox(g,a,var,rms)
+	CALL mostrar_aprox(g,a)
 	CALL biseccion(bis_a,bis_b,a,g,dur,tol)
 CONTAINS
 
 SUBROUTINE ingresar_datos(k,x,y)
 	INTEGER i,k
 	REAL(8) x(k),y(k)
-	!INGRESA LOS PUNTOS DEL ARCHIVO "puntos.txt"
+	!INGRESA LOS PUNTOS DEL ARCHIVO "puntos_<gas>.txt"
 	
 	OPEN(UNIT=2,FILE='puntos_carbono.txt',STATUS='old')
 	
@@ -40,92 +36,80 @@ SUBROUTINE ingresar_datos(k,x,y)
 	CLOSE(2)
 END SUBROUTINE
 
-SUBROUTINE armar_sistema(k,g,x,y,m)
-	INTEGER k,g,i,j
-	REAL(8) x(k),y(k),m(g+1,g+2)
-	!ARMA EL SISTEMA EN "Referencia_1.png"
+SUBROUTINE lagrange(x, y, n, g, a)
+	INTEGER g, n, c
+	REAL(8) x(n),y(n),a(n),xk(n-1),pn(n),denom,mult,comb
+	INTEGER k,i,cant_unos,vec(n-1)
 	
-	m(1,1)=k
-	DO j=2,g+1
-		m(1,j)=sum(x**(j-1))
-	END DO
-	
-	DO i=2, g+1
-		DO j=1, g+1
-			m(i,j)=sum(x**(i+j-2))
-		END DO
-	END DO
-	
-	DO i=1, g+1
-		m(i,g+2)=sum(y*x**(i-1))
-	END DO
-END SUBROUTINE
-
-SUBROUTINE gauss(m,x,g)
-	INTEGER i,k,g
-	REAL(8) m(g,g+1),x(g)
-	!APLICA TRIANGULACION DE GAUSS
-	
-	DO i=1,g
-		IF(m(i,i).ne.0) THEN
-			m(i,:)=m(i,:)/m(i,i)
-			IF(i.ne.g) THEN
-				DO k=i+1,g
-					m(k,:)=m(k,:)-m(k,i)*m(i,:)
-				END DO
+	a = 0
+	DO k=1,n
+		xk = 0
+		DO i=1,n
+			IF(i<k) THEN
+				xk(i)=x(i)
+			ELSE IF (i>k) THEN
+				xk(i-1)=x(i)
 			END IF
-		END IF
-	END DO
-	
-	CALL susreg(m,x,g)
-END SUBROUTINE
-
-SUBROUTINE susreg(m,x,g)
-	INTEGER i,k,g
-	REAL(8) m(g,g+1),x(g),s
-	!APLICA SUSTITUCION REGRESIVA
-	
-	x(g)=m(g,g+1)/m(g,g)
-	i=g-1
-	DO WHILE (i>=1)
-		s=0
-		DO k=i+1,g
-			s=m(i,k)*x(k)+s
 		END DO
-		x(i)=(m(i,g+1)-s)/m(i,i)
-		i=i-1
-	END DO
-END SUBROUTINE
-
-SUBROUTINE errores(g,k,x,y,a,e)
-	INTEGER g,k,i,j
-	REAL(8) x(k),y(k),a(g+1),e(k),p
-	!CALCULA LOS ERRORES Y LOS DEVUELVE EN "e"
-	
-	DO j=1,k
-		p=0
-		DO i=1,g+1
-			p=a(i)*(x(j)**(i-1))+p
+		
+		denom = 1.0
+		DO i=1,n-1
+			denom = denom*(x(k)-xk(i))
 		END DO
-		e(j)=y(j)-p
+		
+		mult = y(k)/denom
+		
+		vec = 0
+		pn = 0.
+		DO i=1,(2**g)
+			cant_unos = sum(vec)
+			comb = 1.
+			DO c=1,g
+				IF (vec(c).ne.0) THEN
+					comb = comb*vec(c)*(-xk(c))
+				ELSE
+					comb = comb*1.0
+				END IF
+			END DO
+			pn(n-cant_unos) = pn(n-cant_unos) + comb
+			CALL unos(vec,g)
+		END DO
+		pn = pn*mult
+		a = a + pn
 	END DO
 END SUBROUTINE
 
-SUBROUTINE mostrar_aprox(g,a,var,rms)
+SUBROUTINE unos(vec,n)
+	INTEGER n, i
+	INTEGER vec(n)
+	
+	i=1
+	DO WHILE (vec(i)==1 .AND. i<=n)
+		vec(i)=0
+		i = i+1
+	END DO
+	IF (i>n) THEN
+		vec = 0
+	ELSE
+		vec(i) = 1
+	END IF
+END SUBROUTINE
+
+SUBROUTINE mostrar_aprox(g,a)
 	INTEGER g,i
-	REAL(8) a(g+1), var, rms
+	REAL(8) a(g+1)
 	!MUESTRA EN PANTALLA LA APROXIMACION OBTENIDA
 	
 	WRITE(*,*) "Polinomio obtenido:"
 	DO i=1,g+1
-		WRITE(*,'(F10.5,A3,I2)',ADVANCE='NO') a(i),'*x^',i-1
+		!WRITE(*,'(F10.5,A3,I2)',ADVANCE='NO') a(i),'*x^',i-1
+		WRITE(*,*) a(i),'*x^',i-1
 		IF(i.ne.(g+1)) THEN
 			WRITE(*,'(A3)',ADVANCE='NO') ' + '
 		END IF
 	END DO
 	
 	WRITE(*,*)
-	WRITE(*,*) "Varianza: ",var," | RMS:",rms
 END SUBROUTINE
 
 SUBROUTINE biseccion(bis_a,bis_b,a,g,dur,tol)
