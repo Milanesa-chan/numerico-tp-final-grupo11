@@ -121,7 +121,6 @@ real(8) m(n,n+1), x(n)
      end if
   end do
 
-
 call regreg(m,x,n)
 
 end subroutine
